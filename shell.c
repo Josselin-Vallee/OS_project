@@ -97,7 +97,16 @@ char **parseInput(char *user_input){
 }
 
 void pollBgProcesses(){
-	
+	pid_t bg_pid;
+	int status;
+	bg_pid = waitpid(-1, &status, WNOHANG);
+	if(bg_pid < 0){
+		
+	}else if(bg_pid > 0){
+		//recursion : while we find terminating processes, we search for more
+		pollBgProcesses();
+	}
+
 }
 
 int executeCmd(char **par){
@@ -158,7 +167,7 @@ int cdCommand(char **par){
 }
 
 int checkEnvCommand(char **par){
-	printf("exit command");
+	printf("checkEnv command");
 	return 1;
 }
 
