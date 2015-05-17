@@ -17,6 +17,7 @@
 
 int main(int argc, char *argv[]){
 	
+	//main loop of the shell
 	shell_loop();
 	
 	return EXIT_SUCCESS;
@@ -52,7 +53,7 @@ void shell_loop(void){
 			run = executeCmd(params);
 		}
 		
-		//Clear all input 
+		//Clear all input at end of loop
 		stpcpy(user_input, "");
 		free(params);
 	}
@@ -96,19 +97,39 @@ char **parseInput(char *user_input){
 	return par;
 }
 
+//Function polling for terminated child processes:
+//It will call itself recursively until it doesn't find any zombie processes.
 void pollBgProcesses(){
+	//Variable for background process
 	pid_t bg_pid;
+	//Status variable
 	int status;
+	//Try reaping zombie processes.
 	bg_pid = waitpid(-1, &status, WNOHANG);
-	if(bg_pid < 0){
-		
-	}else if(bg_pid > 0){
+	//Didn't find any terminated process
+	if(bg_pid < 0){ 
+		if (errno==ECHILD){
+			;
+		}else {
+			perror("Problem occured while checcking for terminated background processes.\n");
+			exit(1);
+		}
+	}else if(bg_pid > 0){ //Found zombie process.
+		//Check for exit status
+		if (WIFEXITED(status)){
+			//Process terminated successfully : print message
+			printf("Terminated background process : %d \n",bg_pid);
+		} else {
+			//Process didn't terminate normally
+			printf("Background process : %d an error occured during termination.\n", bg_pid);
+		}
 		//recursion : while we find terminating processes, we search for more
 		pollBgProcesses();
 	}
 
 }
 
+//Function that test for built-in function or regular call.
 int executeCmd(char **par){
 	//First : Check for built-in commands.
 	//Exit command
@@ -124,6 +145,7 @@ int executeCmd(char **par){
 	}
 }
 
+//Regular command
 int regCommand(char **par){
 	int last = 0;
 	//Go to last element.
@@ -141,31 +163,62 @@ int regCommand(char **par){
 	}
 }
 
+//Foreground process
 int foregroundProcess(char **par){
 	//Pids
 	pid_t pid, wpid;
 	//Time of start and finish of the process
-	float tStart, tFinish;
+	float tStart, tFinish, tStart_ms, tFinish_ms;
+	if (gettimeofday(&tStart,NULL) == -1)			/* First point in time gets determined          */
+	{
+		perror("Error occured in call of gettimeofday.\n"); 
+		exit(1);
+	}
+	pid = fork();
+	if(pid == 0){
+		
+	}else if(pid == -1){
+		perror("fork system call failed");
+		exit(1);
+	}else if(oid > 0){
+		
+	}
 	printf("foreground process");
 	return 1;
 }
 
+//Background process
 int backgroundProcess(char **par){
 	pid_t pid;
+	pid = fork();
+	if(pid == 0){ //fork successful
+		
+	}else if(pid == -1){ //problem occured with the fork system call.
+		perror("fork system call failed");
+		exit(1);
+	}else if (pid > 0){ //Background proces spawned successfully
+		printf("Spawned background process : %d.\n", pid);
+	}
 	printf("background process");
 	return 1;
 }
 
+//Built-in command : exit.
 int exitCommand(void){
 	printf("exit command");
 	return 0;
 }
 
+//Built-in command : cd
 int cdCommand(char **par){
+	if(chdir(par[1]) == -1){
+		perror("Can't change to that directory.\n");
+	}
 	printf("cd command");
 	return 1;
 }
 
+//Built-in command : checkEnv
 int checkEnvCommand(char **par){
 	printf("checkEnv command");
 	return 1;
