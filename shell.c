@@ -13,6 +13,17 @@
 #define MAX_INPUT 80
 #define MAX_PARAMS 10
 
+void shell_loop(void);
+char **parseInput(char *);
+void pollBgProcesses(void);
+int executeCmd(char **);
+int regCommand(char **); 
+int foregroundProcess(char **);
+int backgroundProcess(char **);
+int exitCommand(void);
+int cdCommand(char **);
+int checkEnvCommand(char **);
+void printShell(void);
 
 
 int main(int argc, char *argv[]){
@@ -169,18 +180,19 @@ int foregroundProcess(char **par){
 	pid_t pid, wpid;
 	//Time of start and finish of the process
 	float tStart, tFinish, tStart_ms, tFinish_ms;
-	if (gettimeofday(&tStart,NULL) == -1)			/* First point in time gets determined          */
+	/*
 	{
 		perror("Error occured in call of gettimeofday.\n"); 
 		exit(1);
 	}
+	*/
 	pid = fork();
 	if(pid == 0){
 		
 	}else if(pid == -1){
 		perror("fork system call failed");
 		exit(1);
-	}else if(oid > 0){
+	}else if(pid > 0){
 		
 	}
 	printf("foreground process");
@@ -205,7 +217,6 @@ int backgroundProcess(char **par){
 
 //Built-in command : exit.
 int exitCommand(void){
-	printf("exit command");
 	return 0;
 }
 
@@ -214,20 +225,19 @@ int cdCommand(char **par){
 	if(chdir(par[1]) == -1){
 		perror("Can't change to that directory.\n");
 	}
-	printf("cd command");
 	return 1;
 }
 
 //Built-in command : checkEnv
 int checkEnvCommand(char **par){
-	printf("checkEnv command");
+	printf("checkEnv command\n");
 	return 1;
 }
 
 //Utilitary functions for prompting
 //Simple shell string.
 void printShell(){
-	char* user = getEnv("USER");
+	char* user = getenv("USER");
 	printf("%s@shell > ", user);
 }
 
