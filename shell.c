@@ -303,6 +303,10 @@ int foregroundProcess(char **par){
 /*Background process: Executes the command without waiting for it.*/
 int backgroundProcess(char **par){
 	pid_t pid;
+	#if defined SIGDET && SIGDET==1
+	    linkToHandler(SIGCHLD, handlerSIGCHLD);
+	#endif
+
 	pid = fork();
 	if(pid == 0){ /*Child process : fork successful*/
 	    if(execvp(par[0], par) == -1){ /*execute the command*/
@@ -365,17 +369,18 @@ void handlerSIGCHLD(int signal){
 	pid_t bg_pid;
 	int status;
 	if(signal){}	
-	do{
-		bg_pid = waitpid(-1, &status, WNOHANG);
-		/*Check for exit status*/
+	bg_pid = waitpid(-1, &status, WNOHANG);
+	while(bg_pid > 0){
+	/*Check for exit status*/
 		if (WIFEXITED(status)){
 			/*Process terminated successfully : print message*/
-			printf("Terminated background process : %d \n",bg_pid);
+			printf("\nTerminated background process : %d \n",bg_pid);
 		} else {
 			/*Process didn't terminate normally*/
-			printf("Background process : %d an error occured during termination.\n", bg_pid);
+			printf("\nBackground process : %d an error occured during termination.\n", bg_pid);
 		}
-	}while(bg_pid > 0);
+		bg_pid = waitpid(-1, &status, WNOHANG);
+	}
 }
 
 /*
